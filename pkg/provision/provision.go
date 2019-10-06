@@ -18,5 +18,6 @@ type BasicHost struct {
 	OS         string
 	Name       string
 	UserData   string
+	Token      string
 	Additional map[string]string
 }

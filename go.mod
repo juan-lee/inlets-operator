@@ -1,9 +1,13 @@
-module k8s.io/sample-controller
+module github.com/alexellis/inlets-operator
 
 go 1.13
 
 require (
-	github.com/alexellis/inlets-operator v0.0.0-20191005101341-83d3a87e9173
+	github.com/Azure/azure-sdk-for-go v34.0.0+incompatible
+	github.com/Azure/go-autorest/autorest v0.9.1
+	github.com/Azure/go-autorest/autorest/azure/auth v0.3.0
+	github.com/Azure/go-autorest/autorest/to v0.3.0
+	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1-0.20170626231645-782f4967f2dc // indirect
 	github.com/digitalocean/godo v1.22.0
 	github.com/evanphx/json-patch v4.2.0+incompatible // indirect

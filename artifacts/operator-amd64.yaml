@@ -1,3 +1,10 @@
+apiVersion: v1
+data:
+  credentials.json: ${AZURE_B64ENCODED_CREDENTIALS}
+kind: Secret
+metadata:
+  name: inlets-access-key
+type: Opaque
 ---
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -18,17 +25,23 @@ spec:
       serviceAccountName: inlets-operator
       containers:
       - name: operator
-        image: alexellis/inlets-operator:0.2.6
+        image: jpangms/inlets-operator:0.2.6
+        #image: alexellis/inlets-operator:0.2.6
         imagePullPolicy: Always
         command:
           - ./inlets-operator
-          - "-provider=digitalocean"
+          - "-provider=azure"
+          - "-region=westus2"
+          - "-project-id=<reusing for azure subscription id... for now>"
+          # - "-provider=digitalocean"
           # - "-provider=packet"
           # - "-project-PACKET-ID"
           - "-access-key-file=/var/secrets/inlets/inlets-access-key"
         env:
         - name: client_image
           value: alexellis2/inlets:2.5.0
+        - name: AZURE_AUTH_LOCATION
+          value: /var/secrets/inlets/credentials.json
         resources:
           limits:
             memory: 128Mi

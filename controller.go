@@ -379,6 +379,7 @@ func (c *Controller) syncHandler(key string) error {
 				Plan:     "t1.small.x86",
 				Region:   c.infraConfig.Region,
 				UserData: userData,
+				Token:    tunnel.Spec.AuthToken,
 				Additional: map[string]string{
 					"project_id": c.infraConfig.ProjectID,
 				},
@@ -401,7 +402,31 @@ func (c *Controller) syncHandler(key string) error {
 				Plan:       "512mb",
 				Region:     c.infraConfig.Region,
 				UserData:   userData,
+				Token:      tunnel.Spec.AuthToken,
 				Additional: map[string]string{},
+			})
+
+			if err != nil {
+				return err
+			}
+
+			id = res.ID
+
+		} else if c.infraConfig.Provider == "azure" {
+
+			provisioner, _ := provision.NewAzureProvisioner()
+
+			userData := makeUserdata(tunnel.Spec.AuthToken)
+
+			res, err := provisioner.Provision(provision.BasicHost{
+				Name:     tunnel.Name,
+				Region:   c.infraConfig.Region,
+				UserData: userData,
+				Token:    tunnel.Spec.AuthToken,
+				Additional: map[string]string{
+					// Reuse ProjectID for now
+					"subscriptionID": c.infraConfig.ProjectID,
+				},
 			})
 
 			if err != nil {
@@ -477,6 +502,31 @@ func (c *Controller) syncHandler(key string) error {
 				}
 			}
 
+		} else if c.infraConfig.Provider == "azure" {
+
+			provisioner, _ := provision.NewAzureProvisioner()
+			host, err := provisioner.Status(tunnel.Status.HostID)
+
+			if err != nil {
+				fmt.Println(err)
+				return err
+			}
+			if host.Status == "active" {
+
+				if host.IP != "" {
+					err := c.updateTunnelProvisioningStatus(tunnel, "active", host.ID, host.IP)
+					if err != nil {
+						return err
+					}
+
+					err = c.updateService(tunnel, host.IP)
+					if err != nil {
+						log.Printf("Error updating service: %s, %s", tunnel.Spec.ServiceName, err.Error())
+					}
+				}
+			} else {
+				log.Printf("Still provisioning: %s\n", tunnel.Name)
+			}
 		}
 
 		break
